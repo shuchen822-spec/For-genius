@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>找朋友记分器</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        h2 { text-align: center; color: #333; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .btn-add { background: #28a745; color: white; }
+        .btn-reset { background: #dc3545; color: white; width: 100%; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        .score-input { width: 60px; }
+        .positive { color: #28a745; font-weight: bold; }
+        .negative { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🃏 扑克找朋友避开郑师傅记分助手</h2>
+    
+    <div class="input-group">
+        <input type="text" id="playerName" placeholder="输入玩家名字...">
+        <button class="btn-add" onclick="addPlayer()">添加玩家</button>
+    </div>
+
+    <table id="playerTable">
+        <thead>
+            <tr>
+                <th>玩家</th>
+                <th>当前总分</th>
+                <th>本局增量</th>
+            </tr>
+        </thead>
+        <tbody id="playerBody">
+            </tbody>
+    </table>
+
+    <button class="btn-add" style="width: 100%; margin-top: 15px;" onclick="updateScores()">提交本局得分</button>
+    <button class="btn-reset" onclick="resetGame()">清空重置</button>
+</div>
+
+<script>
+    let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
+
+    function render() {
+        const tbody = document.getElementById('playerBody');
+        tbody.innerHTML = '';
+        players.forEach((p, index) => {
+            const row = `
+                <tr>
+                    <td>${p.name}</td>
+                    <td class="${p.score >= 0 ? 'positive' : 'negative'}">${p.score}</td>
+                    <td><input type="number" class="score-input" id="input-${index}" placeholder="0"></td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+        localStorage.setItem('pokerPlayers', JSON.stringify(players));
+    }
+
+    function addPlayer() {
+        const name = document.getElementById('playerName').value;
+        if (name) {
+            players.push({ name, score: 0 });
+            document.getElementById('playerName').value = '';
+            render();
+        }
+    }
+
+    function updateScores() {
+        players.forEach((p, index) => {
+            const val = parseInt(document.getElementById(`input-${index}`).value) || 0;
+            p.score += val;
+            document.getElementById(`input-${index}`).value = ''; // 清空输入框
+        });
+        render();
+    }
+
+    function resetGame() {
+        if (confirm('确定要清空所有数据吗？')) {
+            players = [];
+            render();
+        }
+    }
+
+    render();
+</script>
+
+</body>
+</html>
