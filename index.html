@@ -10,7 +10,7 @@
         h2 { text-align: center; color: #333; }
         .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
         input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; }
         .btn-add { background: #28a745; color: white; }
         .btn-reset { background: #dc3545; color: white; width: 100%; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -23,23 +23,22 @@
 <body>
 
 <div class="card">
-    <h2>🃏 扑克找朋友带郑师傅自由的飞记分助手</h2>
+    <h2>🃏 扑克找朋友带郑师傅自由的飞记分器</h2>
     
     <div class="input-group">
         <input type="text" id="playerName" placeholder="输入玩家名字...">
         <button class="btn-add" onclick="addPlayer()">添加玩家</button>
     </div>
 
-    <table id="playerTable">
+    <table>
         <thead>
             <tr>
                 <th>玩家</th>
-                <th>当前总分</th>
-                <th>本局增量</th>
+                <th>总分</th>
+                <th>本局</th>
             </tr>
         </thead>
-        <tbody id="playerBody">
-            </tbody>
+        <tbody id="playerBody"></tbody>
     </table>
 
     <button class="btn-add" style="width: 100%; margin-top: 15px;" onclick="updateScores()">提交本局得分</button>
@@ -47,50 +46,83 @@
 </div>
 
 <script>
-    let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
+let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
 
-    function render() {
-        const tbody = document.getElementById('playerBody');
-        tbody.innerHTML = '';
-        players.forEach((p, index) => {
-            const row = `
-                <tr>
-                    <td>${p.name}</td>
-                    <td class="${p.score >= 0 ? 'positive' : 'negative'}">${p.score}</td>
-                    <td><input type="number" class="score-input" id="input-${index}" placeholder="0"></td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-        localStorage.setItem('pokerPlayers', JSON.stringify(players));
-    }
+// 🎤 语音函数
+function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+    const chineseVoice = voices.find(v => v.lang.includes('zh'));
 
-    function addPlayer() {
-        const name = document.getElementById('playerName').value;
-        if (name) {
-            players.push({ name, score: 0 });
-            document.getElementById('playerName').value = '';
-            render();
-        }
-    }
+    if (chineseVoice) utterance.voice = chineseVoice;
 
-    function updateScores() {
-        players.forEach((p, index) => {
-            const val = parseInt(document.getElementById(`input-${index}`).value) || 0;
-            p.score += val;
-            document.getElementById(`input-${index}`).value = ''; // 清空输入框
-        });
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+
+    speechSynthesis.speak(utterance);
+}
+
+speechSynthesis.onvoiceschanged = () => {};
+
+// 渲染
+function render() {
+    const tbody = document.getElementById('playerBody');
+    tbody.innerHTML = '';
+    players.forEach((p, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${p.name}</td>
+                <td class="${p.score >= 0 ? 'positive' : 'negative'}">${p.score}</td>
+                <td><input type="number" class="score-input" id="input-${index}" placeholder="0"></td>
+            </tr>
+        `;
+    });
+    localStorage.setItem('pokerPlayers', JSON.stringify(players));
+}
+
+// 添加玩家
+function addPlayer() {
+    const name = document.getElementById('playerName').value;
+    if (name) {
+        players.push({ name, score: 0 });
+        document.getElementById('playerName').value = '';
         render();
     }
+}
 
-    function resetGame() {
-        if (confirm('确定要清空所有数据吗？')) {
-            players = [];
-            render();
+// 🧠 核心逻辑（嘲讽 + 排名）
+function updateScores() {
+    players.forEach((p, index) => {
+        const val = parseInt(document.getElementById(`input-${index}`).value) || 0;
+
+        if (val > 0) {
+            speak(p.name + "你好棒哦，厉害咯");
+        } else if (val < 0) {
+            speak(p.name + "芭比Q啦，完蛋咯");
         }
+
+        p.score += val;
+        document.getElementById(`input-${index}`).value = '';
+    });
+
+    // 🏆 排名播报
+    if (players.length > 0) {
+        let topPlayer = players.reduce((a, b) => a.score > b.score ? a : b);
+        speak("现在第一名是" + topPlayer.name);
     }
 
     render();
+}
+
+// 重置
+function resetGame() {
+    if (confirm('确定要清空所有数据吗？')) {
+        players = [];
+        render();
+    }
+}
+
+render();
 </script>
 
 </body>
