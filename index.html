@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🃏 台灣國語女聲記分器</title>
+<title>🃏 粤语声普通话记分器</title>
 
 <style>
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+  font-family: system-ui, -apple-system;
   background: #f4f7f6;
   padding: 20px;
 }
@@ -58,18 +58,18 @@ th, td {
 
 <body>
 <div class="card">
-  <h2>🃏 扑克找朋友 · 带郑师傅自由的飞</h2>
+  <h2>🃏 扑克找朋友 · 粤语声普通话</h2>
 
   <div class="input-group">
-    <input id="playerName" placeholder="輸入玩家名字…">
-    <button class="btn-add" onclick="addPlayer()">新增</button>
+    <input id="playerName" placeholder="输入玩家名字…">
+    <button class="btn-add" onclick="addPlayer()">添加</button>
   </div>
 
   <table>
     <thead>
       <tr>
         <th>玩家</th>
-        <th>總分</th>
+        <th>总分</th>
         <th>本局</th>
       </tr>
     </thead>
@@ -83,40 +83,45 @@ th, td {
 <script>
 let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
 
-/* 🎤 台灣國語【女聲 ONLY】 */
+/* 🎤 粤语声线（读普通话） */
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
 
-  // ✅ 只允许台湾国语女声
-  const femaleTW = voices.find(v =>
-    v.lang === 'zh-TW' && /女|female/i.test(v.name)
+  // ✅ 优先：粤语女声（广东口音）
+  let voice = voices.find(v =>
+    v.lang === 'zh-HK' && /女|female/i.test(v.name)
   );
 
-  // 没有台湾女声就直接静音（避免男声）
-  if (!femaleTW) return;
+  // ✅ 兜底：普通话女声
+  if (!voice) {
+    voice = voices.find(v =>
+      v.lang.startsWith('zh') && /女|female/i.test(v.name)
+    );
+  }
 
-  u.voice = femaleTW;
+  if (!voice) return;
 
-  // 台湾国语：柔一点、自然一点
-  u.rate  = 0.8 + Math.random() * 0.05;
-  u.pitch = 1.1 + Math.random() * 0.05;
+  u.voice = voice;
+
+  // 广东普通话感觉：稍慢 + 稍低
+  u.rate  = 0.85 + Math.random() * 0.05;
+  u.pitch = 1.0 + Math.random() * 0.05;
 
   speechSynthesis.speak(u);
 }
 speechSynthesis.onvoiceschanged = () => {};
 
-/* 郑师傅语音包（台湾口语） */
+/* 郑师傅语音包（普通话词，粤味读） */
 const zhengGood = [
-  "欸，不錯喔鄭師傅",
-  "可以啦，這把打得很好",
-  "鄭師傅，滿厲害的耶"
+  "哎，可以啊郑师傅",
+  "不错不错，这把打得好",
+  "郑师傅，你这手可以"
 ];
-
 const zhengBad = [
-  "欸？這把沒分耶",
-  "鄭師傅，這樣不行喔",
-  "唉唷，又芭比Q了啦"
+  "哎哟，这把没分啊",
+  "郑师傅，这样不行哦",
+  "又芭比Q了啊"
 ];
 
 /* 渲染 */
@@ -157,13 +162,13 @@ function updateScores() {
       } else {
         p.fail++;
         let msg = zhengBad[Math.floor(Math.random() * zhengBad.length)];
-        if (p.fail >= 3) msg += "，真的母湯啦";
+        if (p.fail >= 3) msg += "，真的不太行了";
         speak(msg);
       }
     } else {
       // ✅ 其他人：只有加分才有声音
       if (val > 0) {
-        speak(p.name + "，可以喔");
+        speak(p.name + "，可以啊");
       }
     }
 
@@ -175,7 +180,7 @@ function updateScores() {
 
 /* 重置 */
 function resetGame() {
-  if (confirm("確定要清空嗎？")) {
+  if (confirm("确定清空？")) {
     players = [];
     render();
   }
@@ -184,3 +189,4 @@ render();
 </script>
 </body>
 </html>
+``
