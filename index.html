@@ -1,129 +1,206 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>找朋友记分器</title>
-    <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        h2 { text-align: center; color: #333; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; }
-        .btn-add { background: #28a745; color: white; }
-        .btn-reset { background: #dc3545; color: white; width: 100%; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        .score-input { width: 60px; }
-        .positive { color: #28a745; font-weight: bold; }
-        .negative { color: #dc3545; font-weight: bold; }
-    </style>
-</head>
-<body>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🃏 郑师傅牌桌记分器</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont;
+      background: #f4f7f6;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      max-width: 520px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-add { background: #28a745; color: #fff; }
+    .btn-submit { background: #007bff; color: #fff; width: 100%; margin-top: 10px; }
+    .btn-reset { background: #dc3545; color: #fff; width: 100%; margin-top: 10px; }
 
-<div class="card">
-    <h2>🃏 扑克找朋友带郑师傅自由的飞记分器</h2>
-    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    .positive { color: #28a745; font-weight: bold; }
+    .negative { color: #dc3545; font-weight: bold; }
+    .score-input { width: 70px; }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>🃏 扑克找朋友 · 郑师傅专用记分器</h2>
+
     <div class="input-group">
-        <input type="text" id="playerName" placeholder="输入玩家名字...">
-        <button class="btn-add" onclick="addPlayer()">添加玩家</button>
+      <input id="playerName" placeholder="输入玩家名字…" />
+      <button class="btn-add" onclick="addPlayer()">添加</button>
     </div>
 
     <table>
-        <thead>
-            <tr>
-                <th>玩家</th>
-                <th>总分</th>
-                <th>本局</th>
-            </tr>
-        </thead>
-        <tbody id="playerBody"></tbody>
+      <thead>
+        <tr>
+          <th>玩家</th>
+          <th>总分</th>
+          <th>本局</th>
+        </tr>
+      </thead>
+      <tbody id="playerBody"></tbody>
     </table>
 
-    <button class="btn-add" style="width: 100%; margin-top: 15px;" onclick="updateScores()">提交本局得分</button>
+    <button class="btn-submit" onclick="updateScores()">提交本局得分</button>
     <button class="btn-reset" onclick="resetGame()">清空重置</button>
-</div>
+  </div>
 
 <script>
 let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
 
-// 🎤 语音函数
+/* 🎤 广西味语音 */
 function speak(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = speechSynthesis.getVoices();
-    const chineseVoice = voices.find(v => v.lang.includes('zh'));
-
-    if (chineseVoice) utterance.voice = chineseVoice;
-
-    utterance.rate = 0.9;
-    utterance.pitch = 1.1;
-
-    speechSynthesis.speak(utterance);
+  const u = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const zhVoice =
+    voices.find(v => v.lang.includes('zh') && /女|female/i.test(v.name)) ||
+    voices.find(v => v.lang.includes('zh'));
+  if (zhVoice) u.voice = zhVoice;
+  u.rate = 0.78;
+  u.pitch = 1.25;
+  speechSynthesis.speak(u);
 }
-
 speechSynthesis.onvoiceschanged = () => {};
 
-// 渲染
+/* 🔔 锣 */
+function gong() {
+  const ctx = new AudioContext();
+  const o = ctx.createOscillator();
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(600, ctx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.5);
+  o.connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.5);
+}
+
+/* 💥 爆炸 */
+function boom() {
+  const ctx = new AudioContext();
+  const o = ctx.createOscillator();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(90, ctx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.4);
+  o.connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.4);
+}
+
+/* 渲染 */
 function render() {
-    const tbody = document.getElementById('playerBody');
-    tbody.innerHTML = '';
-    players.forEach((p, index) => {
-        tbody.innerHTML += `
-            <tr>
-                <td>${p.name}</td>
-                <td class="${p.score >= 0 ? 'positive' : 'negative'}">${p.score}</td>
-                <td><input type="number" class="score-input" id="input-${index}" placeholder="0"></td>
-            </tr>
-        `;
-    });
-    localStorage.setItem('pokerPlayers', JSON.stringify(players));
+  const tbody = document.getElementById('playerBody');
+  tbody.innerHTML = '';
+  players.forEach((p, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${p.name}</td>
+        <td class="${p.score >= 0 ? 'positive' : 'negative'}">${p.score}</td>
+        <td><input type="number" class="score-input" id="input-${i}" placeholder="0"></td>
+      </tr>
+    `;
+  });
+  localStorage.setItem('pokerPlayers', JSON.stringify(players));
 }
 
-// 添加玩家
+/* 添加玩家 */
 function addPlayer() {
-    const name = document.getElementById('playerName').value;
-    if (name) {
-        players.push({ name, score: 0 });
-        document.getElementById('playerName').value = '';
-        render();
-    }
+  const name = playerName.value.trim();
+  if (!name) return;
+  players.push({ name, score: 0, fail: 0 });
+  playerName.value = '';
+  render();
 }
 
-// 🧠 核心逻辑（嘲讽 + 排名）
+/* ✅ 核心逻辑 */
 function updateScores() {
-    players.forEach((p, index) => {
-        const val = parseInt(document.getElementById(`input-${index}`).value) || 0;
+  players.forEach((p, i) => {
+    const val = parseInt(document.getElementById(`input-${i}`).value) || 0;
+    const isZheng = /zheng|郑/i.test(p.name);
 
-        if (val > 0) {
-            speak(p.name + "你好棒哦，厉害咯");
-        } else if (val < 0) {
-            speak(p.name + "芭比Q啦，完蛋咯");
+    if (isZheng) {
+      if (val > 0) {
+        p.fail = 0;
+        gong();
+        speak("郑师傅，你好棒哦");
+      } else {
+        p.fail++;
+        boom();
+        if (p.fail === 1) {
+          speak("郑师傅，你芭比Q啦，啦啦啦");
+        } else if (p.fail === 2) {
+          speak("哎哟郑师傅，又芭比Q咯");
+        } else {
+          speak("郑师傅你在搞莫子哦？芭比Q啦啦啦啦！");
         }
-
-        p.score += val;
-        document.getElementById(`input-${index}`).value = '';
-    });
-
-    // 🏆 排名播报
-    if (players.length > 0) {
-        let topPlayer = players.reduce((a, b) => a.score > b.score ? a : b);
-        speak("现在第一名是" + topPlayer.name);
+      }
+    } else {
+      if (val > 0) {
+        gong();
+        speak(p.name + "你好棒哦");
+      } else if (val < 0) {
+        boom();
+        speak(p.name + "芭比Q啦");
+      }
     }
 
-    render();
+    p.score += val;
+    document.getElementById(`input-${i}`).value = '';
+  });
+
+  if (players.length) {
+    const top = players.reduce((a, b) => a.score > b.score ? a : b);
+    speak("现在第一名是" + top.name);
+  }
+  render();
 }
 
-// 重置
+/* 重置 */
 function resetGame() {
-    if (confirm('确定要清空所有数据吗？')) {
-        players = [];
-        render();
-    }
+  if (confirm("确定清空所有数据？")) {
+    players = [];
+    render();
+  }
 }
-
 render();
 </script>
-
 </body>
 </html>
