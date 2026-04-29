@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🃏 粤语声普通话记分器</title>
+<title>🃏 广西话记分器（稳定版）</title>
 
 <style>
 body {
@@ -58,7 +58,7 @@ th, td {
 
 <body>
 <div class="card">
-  <h2>🃏 扑克找朋友 · 粤语声普通话</h2>
+  <h2>🃏 扑克找朋友 · 广西话版</h2>
 
   <div class="input-group">
     <input id="playerName" placeholder="输入玩家名字…">
@@ -83,46 +83,22 @@ th, td {
 <script>
 let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
 
-/* 🎤 粤语声线（读普通话） */
+/* 🎤 最稳的语音：普通话 + 广西节奏 */
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
 
-  // ✅ 优先：粤语女声（广东口音）
-  let voice = voices.find(v =>
-    v.lang === 'zh-HK' && /女|female/i.test(v.name)
-  );
+  // ✅ 随便选一个中文语音（不挑，保证能响）
+  const zh = voices.find(v => v.lang.startsWith('zh'));
+  if (zh) u.voice = zh;
 
-  // ✅ 兜底：普通话女声
-  if (!voice) {
-    voice = voices.find(v =>
-      v.lang.startsWith('zh') && /女|female/i.test(v.name)
-    );
-  }
-
-  if (!voice) return;
-
-  u.voice = voice;
-
-  // 广东普通话感觉：稍慢 + 稍低
-  u.rate  = 0.85 + Math.random() * 0.05;
-  u.pitch = 1.0 + Math.random() * 0.05;
+  // 广西味：慢一点，高一点
+  u.rate  = 0.85;
+  u.pitch = 1.15;
 
   speechSynthesis.speak(u);
 }
 speechSynthesis.onvoiceschanged = () => {};
-
-/* 郑师傅语音包（普通话词，粤味读） */
-const zhengGood = [
-  "哎，可以啊郑师傅",
-  "不错不错，这把打得好",
-  "郑师傅，你这手可以"
-];
-const zhengBad = [
-  "哎哟，这把没分啊",
-  "郑师傅，这样不行哦",
-  "又芭比Q了啊"
-];
 
 /* 渲染 */
 function render() {
@@ -144,7 +120,7 @@ function render() {
 function addPlayer() {
   const name = playerName.value.trim();
   if (!name) return;
-  players.push({ name, score: 0, fail: 0 });
+  players.push({ name, score: 0 });
   playerName.value = '';
   render();
 }
@@ -157,18 +133,14 @@ function updateScores() {
 
     if (isZheng) {
       if (val > 0) {
-        p.fail = 0;
-        speak(zhengGood[Math.floor(Math.random() * zhengGood.length)]);
+        speak("郑师傅，你好棒哦");
       } else {
-        p.fail++;
-        let msg = zhengBad[Math.floor(Math.random() * zhengBad.length)];
-        if (p.fail >= 3) msg += "，真的不太行了";
-        speak(msg);
+        speak("郑师傅，你芭比Q啦，啦啦啦");
       }
     } else {
       // ✅ 其他人：只有加分才有声音
       if (val > 0) {
-        speak(p.name + "，可以啊");
+        speak(p.name + "，可以哦");
       }
     }
 
@@ -189,4 +161,3 @@ render();
 </script>
 </body>
 </html>
-``
