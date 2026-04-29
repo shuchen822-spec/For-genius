@@ -176,10 +176,8 @@ function updateScores() {
       if (val > 0) {
         gong();
         speak(p.name + "你好棒哦");
-      } else if (val < 0) {
-        boom();
-        speak(p.name + "芭比Q啦");
-      }
+      } 
+      // val <= 0 时：不出声
     }
 
     p.score += val;
