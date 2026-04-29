@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🃏 找朋友记分器</title>
+<title>🃏 扑克记分器</title>
 
 <style>
 body {
@@ -83,12 +83,10 @@ th, td {
 <script>
 let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
 
-/* 🎤 最稳的语音：普通话 + 广西节奏 */
+/* 🎤 广西话模拟（最稳） */
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
-
-  // ✅ 随便选一个中文语音（不挑，保证能响）
   const zh = voices.find(v => v.lang.startsWith('zh'));
   if (zh) u.voice = zh;
 
@@ -125,7 +123,7 @@ function addPlayer() {
   render();
 }
 
-/* ✅ 核心逻辑 */
+/* ✅ 核心逻辑 + 头名播报 */
 function updateScores() {
   players.forEach((p, i) => {
     const val = parseInt(document.getElementById(`input-${i}`).value) || 0;
@@ -133,12 +131,12 @@ function updateScores() {
 
     if (isZheng) {
       if (val > 0) {
-        speak("哇哦, 郑师傅，你好棒哦");
+        speak("郑师傅，你好棒哦");
       } else {
-        speak("郑师傅，你芭比Q啦，啦啦啦");
+        speak("郑师傅，你芭比Q啦，啦..啦..啦");
       }
     } else {
-      // ✅ 其他人：只有加分才有声音
+      // 其他人：只有加分才有声音
       if (val > 0) {
         speak(p.name + "，可以哦");
       }
@@ -147,6 +145,20 @@ function updateScores() {
     p.score += val;
     document.getElementById(`input-${i}`).value = '';
   });
+
+  // 🏆 头名播报（支持并列）
+  if (players.length > 0) {
+    const maxScore = Math.max(...players.map(p => p.score));
+    const leaders = players.filter(p => p.score === maxScore);
+
+    if (leaders.length === 1) {
+      speak("现在第一名是 " + leaders[0].name);
+    } else if (leaders.length > 1) {
+      const names = leaders.map(p => p.name).join(" 和 ");
+      speak("现在并列第一的是 " + names);
+    }
+  }
+
   render();
 }
 
