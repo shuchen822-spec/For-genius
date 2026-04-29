@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🃏 郑师傅自然语音记分器</title>
+<title>🃏 台灣國語女聲記分器</title>
+
 <style>
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont;
@@ -60,15 +61,15 @@ th, td {
   <h2>🃏 扑克找朋友 · 带郑师傅自由的飞</h2>
 
   <div class="input-group">
-    <input id="playerName" placeholder="输入玩家名字…">
-    <button class="btn-add" onclick="addPlayer()">添加</button>
+    <input id="playerName" placeholder="輸入玩家名字…">
+    <button class="btn-add" onclick="addPlayer()">新增</button>
   </div>
 
   <table>
     <thead>
       <tr>
         <th>玩家</th>
-        <th>总分</th>
+        <th>總分</th>
         <th>本局</th>
       </tr>
     </thead>
@@ -82,54 +83,40 @@ th, td {
 <script>
 let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
 
-/* 🎤 自然语音 */
+/* 🎤 台灣國語【女聲 ONLY】 */
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
-  const zh =
-    voices.find(v => v.lang.includes('zh') && /女|female/i.test(v.name)) ||
-    voices.find(v => v.lang.includes('zh'));
-  if (zh) u.voice = zh;
-  u.rate = 0.75 + Math.random() * 0.1;
-  u.pitch = 1.15 + Math.random() * 0.1;
+
+  // ✅ 只允许台湾国语女声
+  const femaleTW = voices.find(v =>
+    v.lang === 'zh-TW' && /女|female/i.test(v.name)
+  );
+
+  // 没有台湾女声就直接静音（避免男声）
+  if (!femaleTW) return;
+
+  u.voice = femaleTW;
+
+  // 台湾国语：柔一点、自然一点
+  u.rate  = 0.8 + Math.random() * 0.05;
+  u.pitch = 1.1 + Math.random() * 0.05;
+
   speechSynthesis.speak(u);
 }
 speechSynthesis.onvoiceschanged = () => {};
 
-/* 🔔 锣 */
-function gong() {
-  const ctx = new AudioContext();
-  const o = ctx.createOscillator();
-  o.type = 'triangle';
-  o.frequency.setValueAtTime(600, ctx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.4);
-  o.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime + 0.4);
-}
-
-/* 💥 爆 */
-function boom() {
-  const ctx = new AudioContext();
-  const o = ctx.createOscillator();
-  o.type = 'sawtooth';
-  o.frequency.setValueAtTime(90, ctx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.3);
-  o.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime + 0.3);
-}
-
-/* 郑师傅语音包 */
+/* 郑师傅语音包（台湾口语） */
 const zhengGood = [
-  "哎，可以啊郑师傅",
-  "不错咯，这把打得好",
-  "郑师傅，你这手可以哦"
+  "欸，不錯喔鄭師傅",
+  "可以啦，這把打得很好",
+  "鄭師傅，滿厲害的耶"
 ];
+
 const zhengBad = [
-  "哎哟，郑师傅芭比Q啦",
-  "诶？这把又没分咯",
-  "郑师傅你在搞莫子哦"
+  "欸？這把沒分耶",
+  "鄭師傅，這樣不行喔",
+  "唉唷，又芭比Q了啦"
 ];
 
 /* 渲染 */
@@ -141,14 +128,14 @@ function render() {
       <tr>
         <td>${p.name}</td>
         <td class="${p.score >= 0 ? 'positive' : 'negative'}">${p.score}</td>
-        <td><input type="number" id="input-${i}" class="score-input" placeholder="0"></td>
+        <td><input type="number" class="score-input" id="input-${i}" placeholder="0"></td>
       </tr>
     `;
   });
   localStorage.setItem('pokerPlayers', JSON.stringify(players));
 }
 
-/* 添加 */
+/* 添加玩家 */
 function addPlayer() {
   const name = playerName.value.trim();
   if (!name) return;
@@ -161,26 +148,23 @@ function addPlayer() {
 function updateScores() {
   players.forEach((p, i) => {
     const val = parseInt(document.getElementById(`input-${i}`).value) || 0;
-    const isZheng = /zheng|郑/i.test(p.name);
+    const isZheng = /zheng|郑|鄭/i.test(p.name);
 
     if (isZheng) {
       if (val > 0) {
         p.fail = 0;
-        gong();
-        speak(zhengGood[Math.floor(Math.random()*zhengGood.length)]);
+        speak(zhengGood[Math.floor(Math.random() * zhengGood.length)]);
       } else {
         p.fail++;
-        boom();
-        let msg = zhengBad[Math.floor(Math.random()*zhengBad.length)];
-        if (p.fail >= 3) msg += "，啦啦啦";
+        let msg = zhengBad[Math.floor(Math.random() * zhengBad.length)];
+        if (p.fail >= 3) msg += "，真的母湯啦";
         speak(msg);
       }
     } else {
+      // ✅ 其他人：只有加分才有声音
       if (val > 0) {
-        gong();
-        speak(p.name + "，可以哦");
+        speak(p.name + "，可以喔");
       }
-      // 其他人 val <= 0 完全静音 ✅
     }
 
     p.score += val;
@@ -191,7 +175,7 @@ function updateScores() {
 
 /* 重置 */
 function resetGame() {
-  if (confirm("确定清空？")) {
+  if (confirm("確定要清空嗎？")) {
     players = [];
     render();
   }
@@ -200,4 +184,3 @@ render();
 </script>
 </body>
 </html>
-``
