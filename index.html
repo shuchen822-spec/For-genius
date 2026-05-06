@@ -110,11 +110,11 @@ function convertScore(num) {
   const cycle = ((num - 1) % 14) + 1;
   
   switch(cycle) {
-    case 11: return '沟';
-    case 12: return '圈';
-    case 13: return 'K';
-    case 14: return 'S';
-    default: return cycle.toString();
+    case 11: speak('沟'); return '沟';
+    case 12: speak('圈'); return '圈';
+    case 13: speak('K'); return 'K';
+    case 14: speak('S'); return 'S';
+    default: speak(cycle.toString()); return cycle.toString();
   }
 }
 
@@ -155,7 +155,9 @@ function updateScores() {
     if (val > 0) {
       const scoreText = convertScore(val);
       const announcement = `${p.name}得${scoreText}分`;
-      speak(announcement);
+      setTimeout(() => {
+        speak(announcement);
+      }, 300);
 
       const isZheng = /zheng|郑|鄭/i.test(p.name);
       if (isZheng) {
