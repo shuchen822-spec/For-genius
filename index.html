@@ -110,11 +110,20 @@ function convertScore(num) {
   const cycle = ((num - 1) % 14) + 1;
   
   switch(cycle) {
+    case 1: return '一';
+    case 2: return '二';
+    case 3: return '三';
+    case 4: return '四';
+    case 5: return '五';
+    case 6: return '六';
+    case 7: return '七';
+    case 8: return '八';
+    case 9: return '九';
+    case 10: return '十';
     case 11: return '沟';
     case 12: return '圈';
     case 13: return 'K';
     case 14: return 'S';
-    default: return cycle.toString();
   }
 }
 
@@ -173,13 +182,15 @@ function updateScores() {
   const maxScore = Math.max(...scores);
   const minScore = Math.min(...scores);
 
-  // 3. 播报领先者及分数
+  // 3. 播报领先者及分数（使用转换后的文本）
   const leaders = players.filter(p => p.score === maxScore);
   if (leaders.length === 1) {
-    speak("现在的领先者是 " + leaders[0].name + "，分数是 " + leaders[0].score);
+    const leaderScore = convertScore(leaders[0].score);
+    speak("现在的领先者是 " + leaders[0].name + "，分数是 " + leaderScore);
   } else if (leaders.length > 1) {
     const names = leaders.map(p => p.name).join("和");
-    speak(names + "并列领先，分数都是 " + maxScore);
+    const maxScoreText = convertScore(maxScore);
+    speak(names + "并列领先，分数都是 " + maxScoreText);
   }
 
   // 4. 核心功能：只有名字含 zheng 的人垫底时播报 (不限分数正负)
