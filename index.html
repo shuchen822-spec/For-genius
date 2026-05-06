@@ -3,65 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🃏 台湾口音记分器（含头名播报）</title>
+<title>🃏 台湾口音记分器（郑师傅专属监控版）</title>
 
 <style>
-body {
-  font-family: system-ui, -apple-system;
-  background: #f4f7f6;
-  padding: 20px;
-}
-.card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 20px;
-  max-width: 520px;
-  margin: auto;
-  box-shadow: 0 8px 16px rgba(0,0,0,.1);
-}
-h2 { text-align: center; }
-.input-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-button {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-}
-.btn-add { background: #28a745; color: #fff; }
-.btn-submit { background: #007bff; color: #fff; width: 100%; margin-top: 10px; }
-.btn-reset { background: #dc3545; color: #fff; width: 100%; margin-top: 10px; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f4f7f6;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 8px 16px rgba(0,0,0,.1);
+  }
+  h2 { text-align: center; color: #333; margin-top: 0; }
+  .input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    outline: none;
+  }
+  button {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.2s;
+  }
+  button:active { opacity: 0.8; }
+  .btn-add { background: #28a745; color: #fff; }
+  .btn-submit { background: #007bff; color: #fff; width: 100%; margin-top: 15px; font-size: 16px; }
+  .btn-reset { background: #6c757d; color: #fff; width: 100%; margin-top: 10px; font-size: 14px; opacity: 0.7; }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-}
-.positive { color: #28a745; font-weight: bold; }
-.negative { color: #dc3545; font-weight: bold; }
-.score-input { width: 70px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th { background: #f8f9fa; color: #666; font-size: 14px; }
+  th, td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+  }
+  .positive { color: #28a745; font-weight: bold; }
+  .negative { color: #dc3545; font-weight: bold; }
+  .score-input { width: 60px; border: 1px solid #ccc; padding: 5px; }
 </style>
 </head>
 
 <body>
 <div class="card">
-  <h2>🃏 扑克找朋友 · 台湾口音版</h2>
+  <h2>🃏 扑克记分 · 台湾口音版</h2>
 
   <div class="input-group">
-    <input id="playerName" placeholder="输入玩家名字…">
+    <input id="playerName" placeholder="玩家名字 (包含 '郑' 有惊喜)">
     <button class="btn-add" onclick="addPlayer()">添加</button>
   </div>
 
@@ -76,36 +83,32 @@ th, td {
     <tbody id="playerBody"></tbody>
   </table>
 
-  <button class="btn-submit" onclick="updateScores()">提交本局得分</button>
+  <button class="btn-submit" onclick="updateScores()">提交并结算排名</button>
   <button class="btn-reset" onclick="resetGame()">清空重置</button>
 </div>
 
 <script>
 let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
 
-/* 🎤 台湾口音模拟（普通话 TTS，最稳） */
 function speak(text) {
+  if (!text) return;
   const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
-  const zh = voices.find(v => v.lang.startsWith('zh'));
+  // 尽量匹配中文语音
+  const zh = voices.find(v => v.lang.includes('zh-TW')) || voices.find(v => v.lang.includes('zh'));
   if (zh) u.voice = zh;
-
-  // 台湾口音：偏慢、偏柔
-  u.rate  = 0.9;
-  u.pitch = 1.05;
-
+  u.rate = 0.9; 
+  u.pitch = 1.1;
   speechSynthesis.speak(u);
 }
-speechSynthesis.onvoiceschanged = () => {};
 
-/* 渲染 */
 function render() {
   const tbody = document.getElementById('playerBody');
   tbody.innerHTML = '';
   players.forEach((p, i) => {
     tbody.innerHTML += `
       <tr>
-        <td>${p.name}</td>
+        <td><strong>${p.name}</strong></td>
         <td class="${p.score >= 0 ? 'positive' : 'negative'}">${p.score}</td>
         <td><input type="number" class="score-input" id="input-${i}" placeholder="0"></td>
       </tr>
@@ -114,62 +117,65 @@ function render() {
   localStorage.setItem('pokerPlayers', JSON.stringify(players));
 }
 
-/* 添加玩家 */
 function addPlayer() {
-  const name = playerName.value.trim();
+  const input = document.getElementById('playerName');
+  const name = input.value.trim();
   if (!name) return;
   players.push({ name, score: 0 });
-  playerName.value = '';
+  input.value = '';
   render();
 }
 
-/* ✅ 核心逻辑 + 头名播报 */
 function updateScores() {
+  if (players.length === 0) return;
+
+  // 1. 先结算分数
   players.forEach((p, i) => {
     const val = parseInt(document.getElementById(`input-${i}`).value) || 0;
-    const isZheng = /zheng|郑|鄭/i.test(p.name);
-
-    if (isZheng) {
-      if (val > 0) {
-        speak("郑师傅，你好厉害耶");
-      } else {
-        speak("郑师傅，这样不行啦");
-      }
-    } else {
-      // 其他人：只有加分才有声音
-      if (val > 0) {
-        speak(p.name + "，可以喔");
-      }
-    }
-
     p.score += val;
     document.getElementById(`input-${i}`).value = '';
+
+    // 单次动作反馈
+    const isZheng = /zheng|郑|鄭/i.test(p.name);
+    if (isZheng && val > 0) speak("郑师傅，你好厉害耶！");
   });
 
-  // 🏆 头名播报（支持并列）
-  if (players.length > 0) {
-    const maxScore = Math.max(...players.map(p => p.score));
-    const leaders = players.filter(p => p.score === maxScore);
+  // 2. 统计排名
+  const scores = players.map(p => p.score);
+  const maxScore = Math.max(...scores);
+  const minScore = Math.min(...scores);
 
-    if (leaders.length === 1) {
-      speak("现在第一名是 " + leaders[0].name);
-    } else if (leaders.length > 1) {
-      const names = leaders.map(p => p.name).join(" 和 ");
-      speak("现在并列第一的是 " + names);
-    }
+  // 3. 播报领先者
+  const leaders = players.filter(p => p.score === maxScore);
+  if (leaders.length === 1) {
+    speak("现在的领先者是 " + leaders[0].name);
   }
+
+  // 4. 核心功能：只有名字含 zheng 的人垫底时播报 (不限分数正负)
+  const losers = players.filter(p => p.score === minScore);
+  losers.forEach(p => {
+    const isZheng = /zheng|郑|鄭/i.test(p.name);
+    if (isZheng) {
+      setTimeout(() => {
+        speak(p.name + "，你怎么垫底了啦！真的很夸张耶，要加油喔！");
+      }, 1200); 
+    }
+  });
 
   render();
 }
 
-/* 重置 */
 function resetGame() {
-  if (confirm("确定清空？")) {
+  if (confirm("确定要清空吗？")) {
     players = [];
+    localStorage.removeItem('pokerPlayers');
     render();
   }
 }
+
+// 初始化
 render();
+window.speechSynthesis.onvoiceschanged = () => {};
 </script>
 </body>
 </html>
