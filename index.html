@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🃏 扑克记分器</title>
+<title>🃏 台湾口音记分器（含头名播报）</title>
 
 <style>
 body {
@@ -58,7 +58,7 @@ th, td {
 
 <body>
 <div class="card">
-  <h2>🃏 扑克找朋友 · 带郑师傅自由的飞</h2>
+  <h2>🃏 扑克找朋友 · 台湾口音版</h2>
 
   <div class="input-group">
     <input id="playerName" placeholder="输入玩家名字…">
@@ -83,16 +83,16 @@ th, td {
 <script>
 let players = JSON.parse(localStorage.getItem('pokerPlayers')) || [];
 
-/* 🎤 广西话模拟（最稳） */
+/* 🎤 台湾口音模拟（普通话 TTS，最稳） */
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
   const zh = voices.find(v => v.lang.startsWith('zh'));
   if (zh) u.voice = zh;
 
-  // 广西味：慢一点，高一点
-  u.rate  = 0.75;
-  u.pitch = 1.35;
+  // 台湾口音：偏慢、偏柔
+  u.rate  = 0.9;
+  u.pitch = 1.05;
 
   speechSynthesis.speak(u);
 }
@@ -131,14 +131,14 @@ function updateScores() {
 
     if (isZheng) {
       if (val > 0) {
-        speak("郑师傅，你好棒哦");
+        speak("郑师傅，你好厉害耶");
       } else {
-        speak("郑师傅，你芭比Q..啦..啦..啦");
+        speak("郑师傅，这样不行啦");
       }
     } else {
       // 其他人：只有加分才有声音
       if (val > 0) {
-        speak(p.name + "，可以哦");
+        speak(p.name + "，可以喔");
       }
     }
 
