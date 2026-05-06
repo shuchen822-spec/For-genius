@@ -103,18 +103,18 @@ function speak(text) {
 }
 
 function convertScore(num) {
-  // 将分数转换为相应的语音表示
+  // 将分数转换为相应的语音表示（仅返回文本，不播放语音）
   if (num <= 0) return num.toString();
   
   // 循环计数：14之后重新从1开始
   const cycle = ((num - 1) % 14) + 1;
   
   switch(cycle) {
-    case 11: speak('沟'); return '沟';
-    case 12: speak('圈'); return '圈';
-    case 13: speak('K'); return 'K';
-    case 14: speak('S'); return 'S';
-    default: speak(cycle.toString()); return cycle.toString();
+    case 11: return '沟';
+    case 12: return '圈';
+    case 13: return 'K';
+    case 14: return 'S';
+    default: return cycle.toString();
   }
 }
 
