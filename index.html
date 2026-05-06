@@ -145,10 +145,13 @@ function updateScores() {
   const maxScore = Math.max(...scores);
   const minScore = Math.min(...scores);
 
-  // 3. 播报领先者
+  // 3. 播报领先者及分数
   const leaders = players.filter(p => p.score === maxScore);
   if (leaders.length === 1) {
-    speak("现在的领先者是 " + leaders[0].name);
+    speak("现在的领先者是 " + leaders[0].name + "，分数是 " + leaders[0].score);
+  } else if (leaders.length > 1) {
+    const names = leaders.map(p => p.name).join("和");
+    speak(names + "并列领先，分数都是 " + maxScore);
   }
 
   // 4. 核心功能：只有名字含 zheng 的人垫底时播报 (不限分数正负)
