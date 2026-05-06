@@ -102,6 +102,22 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 
+function convertScore(num) {
+  // 将分数转换为相应的语音表示
+  if (num <= 0) return num.toString();
+  
+  // 循环计数：14之后重新从1开始
+  const cycle = ((num - 1) % 14) + 1;
+  
+  switch(cycle) {
+    case 11: return 'gou';
+    case 12: return 'quan';
+    case 13: return 'K';
+    case 14: return 'S';
+    default: return cycle.toString();
+  }
+}
+
 function render() {
   const tbody = document.getElementById('playerBody');
   tbody.innerHTML = '';
@@ -135,9 +151,19 @@ function updateScores() {
     p.score += val;
     document.getElementById(`input-${i}`).value = '';
 
-    // 单次动作反馈
-    const isZheng = /zheng|郑|鄭/i.test(p.name);
-    if (isZheng && val > 0) speak("郑师傅，你好厉害耶！");
+    // 单次动作反馈 - 语音播报本局得分
+    if (val > 0) {
+      const scoreText = convertScore(val);
+      const announcement = `${p.name}得${scoreText}分`;
+      speak(announcement);
+
+      const isZheng = /zheng|郑|鄭/i.test(p.name);
+      if (isZheng) {
+        setTimeout(() => {
+          speak("郑师傅，你好厉害耶！");
+        }, 800);
+      }
+    }
   });
 
   // 2. 统计排名
